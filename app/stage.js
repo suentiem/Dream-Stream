@@ -4,9 +4,7 @@ var Stage = {
         MAIN: 0,
         MESSAGE: 1,
     },
-    initialize: function(){
-        // create an new instance of a pixi stage
-        this.stage = new PIXI.Container();
+    initialize: function(preload, onComplete){
         this.scene = this.scenes.MAIN;
 
         // Read screen dimensions
@@ -19,21 +17,37 @@ var Stage = {
                 y: $body.height()/2 
             }
         };
+        var self = this;
+        this.phaser = new Phaser.Game(this.screen.width, this.screen.height, Phaser.WEBGL, 'main', { 
+            preload: preload, 
+            create: function(){
+                self.messageText = self.phaser.add.text(self.phaser.world.centerX, self.phaser.world.centerY, "Test", { 
+                    font: "24px Arial", 
+                    fill: "#ff0044", 
+                    align: "left"
+                });
+                self.messageText.anchor.set(0.5);
+                onComplete();
+                Stage.phaser.stage.disableVisibilityChange = true;
+            }, 
+            update: this.update.bind(this), 
+            render: this.render.bind(this)
+        }, true);
 
-        // create a renderer instance.
-        this.renderer = PIXI.autoDetectRenderer(this.screen.width, this.screen.height, { transparent: true });
+        // // create a renderer instance.
+        // this.renderer = PIXI.autoDetectRenderer(this.screen.width, this.screen.height, { transparent: true });
 
-        // add the renderer view element to the DOM
-        document.body.appendChild(this.renderer.view);
+        // // add the renderer view element to the DOM
+        // document.body.appendChild(this.renderer.view);
 
-        // Setup message scene
-        this.messageStage = new PIXI.Container();
-        this.messageText = new PIXI.Text('testing', {font : '20px Arial', fill : 0xffffff, stroke: 0x000000, strokeThickness: 6, align : 'left'});
-        this.messageText.anchor.x = 0;
-        this.messageText.anchor.y = 1;
-        this.messageText.x = 10;
-        this.messageText.y = this.screen.height - 10;
-        this.messageStage.addChild(this.messageText);
+        // // Setup message scene
+        // this.messageStage = new PIXI.Container();
+        // this.messageText = new PIXI.Text('testing', {font : '20px Arial', fill : 0xffffff, stroke: 0x000000, strokeThickness: 6, align : 'left'});
+        // this.messageText.anchor.x = 0;
+        // this.messageText.anchor.y = 1;
+        // this.messageText.x = 10;
+        // this.messageText.y = this.screen.height - 10;
+        // this.messageStage.addChild(this.messageText);
     },
     start: function() {
         this.animateBound = this.animate.bind(this);
@@ -45,20 +59,20 @@ var Stage = {
     removeChild: function(sprite) {
         this.stage.removeChild(sprite);
     },
-    swapToMessage: function(message) {
-        this.messageText.text = message;
-        this.scene = this.scenes.MESSAGE;
+    message: function(message) {
+        if (message) {
+            this.messageText.text = message;
+            this.messageText.alpha = 1;
+        } else {
+            this.messageText.alpha = 0;
+        }
     },
-    swapToMain: function() {
-        this.scene = this.scenes.MAIN;
-    },
-    animate: function() {
-        requestAnimationFrame( this.animateBound );
 
-        // render the stage  
-        if (this.scene == this.scenes.MAIN)
-            this.renderer.render(this.stage);
-        else if (this.scene == this.scenes.MESSAGE)
-            this.renderer.render(this.messageStage);
+    
+    snoud: function() {
+    },
+    update: function() {
+    },
+    render: function() {
     }
 };

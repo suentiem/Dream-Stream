@@ -5,7 +5,7 @@
             "effects": [
                 {
                     "type": "SOUND",
-                    "resource": { "type": "file", "source": "ring.mp3" }
+                    "resource": { "type": "single", "source": "ring.mp3" }
                 },
                 {
                     "type": "ANIMATION_FIREWORK",
@@ -31,7 +31,7 @@
             "effects": [
                 {
                     "type": "SOUND",
-                    "resource": { "type": "file", "source": "airhorn.mp3" }
+                    "resource": { "type": "single", "source": "airhorn.mp3" }
                 }
             ] 
         },
@@ -43,7 +43,7 @@
             "effects": [
                 {
                     "type": "SOUND",
-                    "resource": { "type": "file", "source": "airporn.mp3" }
+                    "resource": { "type": "single", "source": "airporn.mp3" }
                 }
             ] 
         }

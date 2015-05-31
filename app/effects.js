@@ -17,22 +17,22 @@ Effects = {
     types: {
         SOUND: new Class({
             Extends: Effect,
-            resourceType: 'SOUND',
+            resourceType: 'audio',
             initialize: function(options){
                 this.parent(options);
                 this.sound = null;
             },
             trigger: function() {
                 if (this.sound)
-                    this.sound.stop();
+                    this.sound.restart();
 
-                this.sound = this.resource.generate();
+                this.sound = this.resource.get();
                 this.sound.play();
             }
         }),
         ANIMATION_FIREWORK: new Class({
             Extends: Effect,
-            resourceType: 'IMAGE',
+            resourceType: 'image',
             initialize: function(options){
                 this.parent(options);
 
@@ -49,17 +49,11 @@ Effects = {
                 if (this.options.intensity === 'HIGH')
                     particleCount = 500;
 
-                for (var p=0; p < particleCount; ++p) {
-                    var asset = this.resource.generate();
-
-                    if (this.options.scale)
-                        asset.scale = {x:this.options.scale, y:this.options.scale};
-
-                    new Particles.firework(asset, {
-                        x: location.x,
-                        y: location.y
-                    });
-                }
+                emitter = Stage.phaser.add.emitter(location.x, location.y, particleCount);
+                emitter.makeParticles(this.resource.getAll());
+                emitter.setScale(0.1 * this.options.scale, this.options.scale, 0.1 * this.options.scale, this.options.scale, 6000, Phaser.Easing.Quintic.Out);
+                emitter.gravity = 200;
+                emitter.start(true, 10000, null, particleCount);
             }
         })
     }
