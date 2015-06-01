@@ -55,5 +55,8 @@ docs/_build/
 
 # PyBuilder
 target/
+build/
+dist/
+*.spec
 settings/*
 files/*

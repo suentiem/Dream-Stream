@@ -4,6 +4,12 @@ from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop, PeriodicCallback
 from os import listdir
 from os.path import isfile, join
+from window import Gui
+from threading import Event
+from time import sleep
+from settings import HOST, PORT
+from gevent.wsgi import WSGIServer
+from gevent import monkey, sleep as gsleep; monkey.patch_all()
 import json
 app = Flask(__name__, static_url_path='')
 
@@ -115,6 +121,15 @@ def send_files(path):
     return send_from_directory('files', path)
 
 if __name__ == "__main__":
-    http_server = HTTPServer(WSGIContainer(app))
-    http_server.listen(9002)
-    IOLoop.instance().start()
+    kill_event = Event()
+    gui = Gui(kill_event)
+    gui.start()
+    gui.set_status_server(True)
+
+    http_server = WSGIServer((HOST, PORT), app)
+    http_server.start()
+
+    while not kill_event.is_set():
+        gsleep(0.1)
+
+    http_server.stop()
