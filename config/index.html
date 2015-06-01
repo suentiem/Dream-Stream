@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <script src="/framework/external/jquery.min.js"></script>
+        <script src="/framework/external/mootools-core-full-nocompat.min.js"></script>
+        <script src="/framework/external/underscore-min.js"></script>
+
+        <!-- Bootstrap -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+        <script src="/framework/events.js"></script>
+        <script src="/framework/resources.js"></script>
+        <script src="/framework/effects.js"></script>
+        <script src="./main.js"></script>
+
+        <link rel="stylesheet" href="style.css">
+
+        <script>
+            $(main);
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <h2>Settings</h2>
+            <header>
+                <form class="form-inline">
+                    <div class="form-group">
+                        <label class="sr-only">Settings</label>
+                        <select class="form-control" id="settings-file"></select>
+                    </div>
+                    <button id="settings-file-new" type="submit" class="btn btn-primary glyphicon glyphicon-plus"></button>
+                </form>
+            </header>
+
+            <h2>Events</h2>
+            <table id="listeners">
+                <thead>
+                    <tr>
+                        <th><h3>When</h3></th>
+                        <th><h3>Do</h3></th>
+                    </tr>
+                </thead>
+                <tbody class="form-inline">
+                    <tr class="new">
+                        <td>   
+                            <button class="btn btn-primary">Add</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </body>
+</html>
