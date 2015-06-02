@@ -31,14 +31,16 @@ Effects = {
             initialize: function(options){
                 this.parent(options);
                 this.sound = null;
-                this.volume = this.options.volume || 100;
+                this.volume = (this.options.volume || 100) / 100;
             },
             trigger: function() {
-                if (this.sound)
-                    this.sound.stop();
+                if (this.sound) {
+                    this.sound.currentTime = 0;
+                    this.sound.pause();
+                }
 
                 this.sound = this.resource.generate();
-                this.sound.setVolume(this.volume);
+                this.sound.volume = this.volume;
                 this.sound.play();
             }
         }),

@@ -21,10 +21,10 @@ var Assets = {
             Extends: Asset,
             initialize: function(uri) {
                 this.parent(uri);
-                var match = this.url.match(/^(.+)\.(.+?)$/);
-                this.sound = new buzz.sound( match[1], { formats: [ match[2] ] });
+                this.sound = new Audio(this.url);
             },
             generate: function() {
+                this.sound.load();
                 return this.sound;
             }
         })

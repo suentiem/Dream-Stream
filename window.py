@@ -21,7 +21,7 @@ class MyFrame(gui.MainFrame):
 
     def m_event_button_files(self, event):
         script_path = os.path.dirname(os.path.abspath(__file__))
-        subprocess.Popen(r'explorer "{}\\files\\"'.format(script_path))
+        os.startfile('{}\\files\\'.format(script_path))
  
 # Create wxpython app
 class GuiApp(wx.App):

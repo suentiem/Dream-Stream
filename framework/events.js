@@ -114,6 +114,30 @@ Events = {
             isTriggered: function (message) { 
                 return (message && message.event && message.event == 'team_death'); 
             }
+        }),
+        GAME_STARTED: new Class({
+            Extends: Event,
+            name: 'Game Started',
+            variables: [ ],
+            isTriggered: function (message) { 
+                return (message && message.event && message.event == 'game_started'); 
+            }
+        }),
+        GAME_FINISHED: new Class({
+            Extends: Event,
+            name: 'Game Finished',
+            variables: [ ],
+            isTriggered: function (message) { 
+                return (message && message.event && message.event == 'game_finished'); 
+            }
+        }),
+        GAME_LOADING: new Class({
+            Extends: Event,
+            name: 'Game Loading',
+            variables: [ ],
+            isTriggered: function (message) { 
+                return (message && message.event && message.event == 'game_loading'); 
+            }
         })
     },
     qualifierOperations: {
