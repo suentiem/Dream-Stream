@@ -1,5 +1,3 @@
-window.DebugEvents = [];
-
 var Event = new Class({
     resourceType: null,
     initialize: function(options){
@@ -15,8 +13,6 @@ var Event = new Class({
         _.each(options.qualifiers, function(qualifierOptions){
             self.qualifiers.push(qualifierOptions);
         });
-        
-        window.DebugEvents.push(this);
     },
     triggerEffects: function() {
         _.each(this.effects, function(effect){ effect.trigger(); });

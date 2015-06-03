@@ -42,6 +42,8 @@ var generateButton = function(text) {
 var generateInput = function(value) {
     return $('<input />').addClass('form-control').val(value || '');
 };
+
+
 var main = function(){
     var defaultSettingsName = null;
     var $settingsFile = $('#settings-file');
@@ -115,7 +117,8 @@ var main = function(){
             var $option = $('<option />').val(name).text(name);
             $settingsFile.append($option);
             $settingsFile.val(name);
-            loadSettings({});
+            appReloadNeeded = true;
+            initializeSettings({});
         });
     });
 
@@ -147,6 +150,7 @@ var main = function(){
         $when.append(generateButton('!remove').addClass('event-delete').addClass('btn-danger'));
         $when.append(generateSelect(options, values.type).addClass('event-select'));
         $when.append(generateButton('!plus').addClass('qualifiers-add'));
+        $when.append(generateButton('!eye-open').addClass('event-test').attr('title', 'Test effect on open pages'));
         $when.append($('<ul />').addClass('qualifiers').addClass('sub-list'));
         $row.append($when);
 
@@ -178,6 +182,13 @@ var main = function(){
         e.preventDefault();
         listenersAddRow();
         settingsChange();
+    });
+    $listeners.on('click', '.event-test', function(e){
+        e.preventDefault();
+        var $event = $(this).closest('tr');
+        var index = $event.prevAll().length;
+
+        socket.send({ signal: 'trigger_event', id: index });
     });
 
     // -------------------- //
@@ -418,6 +429,14 @@ var main = function(){
         postJSON('/settings/save.json', {
             name: $settingsFile.val(),
             settings: settings
-        }, function(){});
+        }, function(){
+            socket.send({ signal: 'reload' });
+        });
     };
+
+
+    // -------------------------------------- //
+    // Settings - Save
+    // -------------------------------------- //
+    var socket = new Socket('127.0.0.1', 9003);
 };

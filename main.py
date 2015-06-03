@@ -7,10 +7,14 @@ from os.path import isfile, join
 from window import Gui
 from threading import Event
 from time import sleep
-from settings import HOST, PORT
+from settings import HOST, PORT, PORT_WS
 from gevent.wsgi import WSGIServer
 from gevent import monkey, sleep as gsleep; monkey.patch_all()
 import json
+from ws4py.server.geventserver import WebSocketWSGIApplication, \
+     WebSocketWSGIHandler, WSGIServer
+from ws4py.websocket import EchoWebSocket
+
 app = Flask(__name__, static_url_path='')
 
 PATH_FILES = './files/'
@@ -120,6 +124,50 @@ def files_list():
 def send_files(path):
     return send_from_directory('files', path)
 
+
+# =============================
+#  Talk Socket
+# =============================
+
+class BroadcastWebSocket(EchoWebSocket):
+    def opened(self):
+        app = self.environ['ws4py.app']
+        app.clients.append(self)
+
+    def received_message(self, m):
+        app = self.environ['ws4py.app']
+        for client in app.clients:
+            client.send(m)
+        pass
+
+    def closed(self, code, reason=None):
+        app = self.environ.pop('ws4py.app')
+        if self in app.clients:
+            app.clients.remove(self)
+
+class EchoWebSocketApplication(object):
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.ws = WebSocketWSGIApplication(handler_cls=BroadcastWebSocket)
+        self.clients = []
+
+    def __call__(self, environ, start_response):
+        if environ['PATH_INFO'] == '/favicon.ico':
+            return self.favicon(environ, start_response)
+
+        if environ['PATH_INFO'] == '/ws':
+            environ['ws4py.app'] = self
+            return self.ws(environ, start_response)
+
+        return None
+
+    def favicon(self, environ, start_response):
+        status = '200 OK'
+        headers = [('Content-type', 'text/plain')]
+        start_response(status, headers)
+        return ""
+
 if __name__ == "__main__":
     kill_event = Event()
     gui = Gui(kill_event)
@@ -128,6 +176,10 @@ if __name__ == "__main__":
 
     http_server = WSGIServer((HOST, PORT), app)
     http_server.start()
+    
+    websocket_application = EchoWebSocketApplication(HOST, PORT_WS)
+    websocket_server = WSGIServer((HOST, PORT_WS), websocket_application)
+    websocket_server.start()
 
     while not kill_event.is_set():
         gsleep(0.1)
