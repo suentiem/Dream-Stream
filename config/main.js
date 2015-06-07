@@ -5,44 +5,6 @@ var postJSON = function(url, data, success) {
         type : 'POST'
     }).success(success);
 };
-var generateSelect = function(options, selected) {
-    var $select = $('<select />').addClass('form-control');
-    _.each(options, function(option){
-        var $option = $('<option />');
-
-        if (typeof(option) === 'object') {
-            $option
-                .val(option.value)
-                .text(option.name);
-        } else {
-            $option
-                .val(option)
-                .text(option);
-        }
-
-        $select.append($option);
-    });
-    if (selected)
-        $select.val(selected);
-    return $select;
-};
-var generateButton = function(text) {
-    var $button = $('<button />');
-
-    $button
-        .addClass('btn')
-        .addClass('btn-default')
-    if (text && text.substr(0,1) == '!')
-        $button.addClass('glyphicon').addClass('glyphicon-' + text.substr(1));
-    else
-        $button.text(text);
-
-    return $button;
-};
-var generateInput = function(value) {
-    return $('<input />').addClass('form-control').val(value || '');
-};
-
 
 var main = function(){
     var defaultSettingsName = null;
@@ -123,6 +85,46 @@ var main = function(){
     });
 
     // -------------------------------------- //
+    // Settings - Export
+    // -------------------------------------- //
+    $('#settings-file-export').on('click', function(e){
+        e.preventDefault();
+
+        var $form = $('<form />');
+        var $name = $('<input name="name" type="hidden" />');
+
+        $form.attr('action', '/export.zip');
+        $form.attr('method', 'post');
+        $name.val($settingsFile.val());
+
+        $form.append($name);
+        $form.submit();
+    });
+
+    // -------------------------------------- //
+    // Settings - Import
+    // -------------------------------------- //
+    $('#settings-file-import-file').on('change', function(e){
+        e.preventDefault();
+
+        $.ajax({
+            url: '/import.json',
+            method: 'post',
+            data: new FormData($(this).closest('form')[0]),
+            cache: false,
+            dataType: 'json',
+            contentType: false,
+            processData: false,
+            success: function(response){
+                if (response.success)
+                    window.location.reload();
+                else
+                    window.alert('Unable to import file.  Make sure it is a ZIP and is meant for this program.');
+            }
+        });
+    });
+
+    // -------------------------------------- //
     // Settings - Build UI
     // -------------------------------------- //
     var initializeSettings = function(settings){
@@ -144,9 +146,12 @@ var main = function(){
         var $do = $('<td />').addClass('do');
 
         // When
-        var options = _.map(Events.types, function(event, id){
-            return {name:event.prototype.name, value:id};
+        var list_of_options = _.map(Events.namespaces, function(namespace, namespace_id){
+            return _.map(namespace.types, function(event, event_id){
+                return {name: namespace.name + ': ' + event.prototype.name, value: namespace_id + '.' + event_id};
+            });
         });
+        var options = _.flatten(list_of_options, true);
         $when.append(generateButton('!remove').addClass('event-delete').addClass('btn-danger'));
         $when.append(generateSelect(options, values.type).addClass('event-select'));
         $when.append(generateButton('!plus').addClass('qualifiers-add'));
@@ -160,9 +165,16 @@ var main = function(){
         });
 
         // Do
-        $do.append($('<ul />').addClass('effects'));
+        var $effects = $('<ul />').addClass('effects');
+        $do.append($effects);
         $do.append(generateButton('Add Effect').addClass('effects-add'));
         $row.append($do);
+
+        $effects.sortable({ 
+            handle: '.effect-move',
+            cancel: '', // make sort handle a button
+            stop: settingsChange
+        });
 
         // Do - effects
         _.each(values.effects || [], function(effect){
@@ -199,9 +211,11 @@ var main = function(){
         
         var $list = $when.find('.qualifiers');
         var $item = $('<li />');
-        var eventId = $when.find('.event-select').val();
+        var namespacedEventId = $when.find('.event-select').val().split('.');
+        var namespaceId = namespacedEventId[0];
+        var eventId = namespacedEventId[1];
 
-        var keyOptions = _.map(Events.types[eventId].prototype.variables, function(variable){
+        var keyOptions = _.map(Events.namespaces[namespaceId].types[eventId].prototype.variables, function(variable){
             return {name:variable.name, value:variable.value};
         });
         var operationOptions = _.map(Events.qualifierOperations, function(operation, id){
@@ -248,14 +262,20 @@ var main = function(){
         });
         $item.append(generateSelect(typeOptions, values.type).addClass('effect-type'));
         $item.append(generateButton('!cog').addClass('effect-settings-toggle'));
+        $item.append(generateButton('!time').addClass('effect-base-settings-toggle'));
         $item.append(generateSelect(resourceOptions, values.resource.type).addClass('resource-type'));
-        $item.append(generateSelect(fileOptions, values.resource.source).addClass('resource-source'));
+        $item.append(generateSelect(fileOptions, values.resource.source, '/').addClass('resource-source'));
+        $item.append(generateButton('!move').addClass('effect-move'));
         $item.append(generateButton('!remove').addClass('effect-delete'));
 
         // Add effect settings
         var $settings = $('<ul />').addClass('effect-settings').addClass('sub-list');
+        var $baseSettings = $('<ul />').addClass('effect-base-settings').addClass('sub-list');
         $item.append($settings);
+        $item.append($baseSettings);
+
         listenersDoEffectAddSettings($settings, values);
+        listenersDoEffectAddSettings($baseSettings, values, 'base');
 
         $list.append($item);
 
@@ -286,12 +306,12 @@ var main = function(){
     // -------------------- //
     // Effect / Settings
     // -------------------- //
-    var listenersDoEffectAddSettings = function ($settings, values) {
+    var listenersDoEffectAddSettings = function ($settings, values, type) {
         values = values || {};
 
         var $effect = $settings.closest('.effect');
         var effectId = $effect.find('.effect-type').val();
-        var settings = Effects.types[effectId].prototype.settings;
+        var settings = Effects.types[effectId].prototype[(type == 'base' ? 'baseSettings' : 'settings')];
 
         $settings.empty();
         _.each(settings, function(setting){
@@ -324,10 +344,20 @@ var main = function(){
 
             // Range needs a counter next to it
             if (setting.type == 'range') {
-                var $stats = $('<input class="form-control stats" disabled>');
+                var min = setting.range[0];
+                var max = setting.range[1];
+                var step = setting.range[2];
+                var $stats = $('<input class="form-control stats" type="number">')
+                    .attr('min', min)
+                    .attr('max', max)
+                    .attr('step', step);
+
                 $field.after($stats);
                 $field.on('change', function(){
                     $stats.val($field.val());
+                });
+                $stats.on('change', function(){
+                    $field.val($stats.val());
                 });
                 $stats.val(value);
             }
@@ -338,6 +368,12 @@ var main = function(){
     $listeners.on('click', '.effect-settings-toggle', function(e){
         e.preventDefault();
         $(this).siblings('.effect-settings').toggle();
+        $(this).siblings('.effect-base-settings').hide();
+    });
+    $listeners.on('click', '.effect-base-settings-toggle', function(e){
+        e.preventDefault();
+        $(this).siblings('.effect-base-settings').toggle();
+        $(this).siblings('.effect-settings').hide();
     });
 
 

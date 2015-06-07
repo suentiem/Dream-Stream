@@ -15,7 +15,7 @@ var Event = new Class({
         });
     },
     triggerEffects: function() {
-        _.each(this.effects, function(effect){ effect.trigger(); });
+        _.each(this.effects, function(effect){ effect.handleTrigger(); });
         return true;
     },
     isTriggered: function() {
@@ -43,98 +43,17 @@ var Event = new Class({
     }
 });
 
+var EventNamespace = new Class({
+    initialize: function(events, onReady){
+        this.events = events;
+    }
+});
+
 Events = {
-    types: {
-        CS: new Class({
-            Extends: Event,
-            name: 'Player CS',
-            variables: [
-                {name:'Amount',value:'amount'},
-                {name:'Total',value:'total'}
-            ],
-            isTriggered: function (message) { 
-                return (message && message.event && message.event == 'cs'); 
-            }
-        }),
-        KILL: new Class({
-            Extends: Event,
-            name: 'Player Kill',
-            variables: [
-                {name:'Amount',value:'amount'},
-                {name:'Streak',value:'streak'},
-                {name:'Total',value:'total'}
-            ],
-            isTriggered: function (message) { 
-                return (message && message.event && message.event == 'kill'); 
-            }
-        }),
-        DEATH: new Class({
-            Extends: Event,
-            name: 'Player Death',
-            variables: [
-                {name:'Total',value:'total'}
-            ],
-            isTriggered: function (message) { 
-                return (message && message.event && message.event == 'death'); 
-            }
-        }),
-        ASSIST: new Class({
-            Extends: Event,
-            name: 'Player Assist',
-            variables: [
-                {name:'Amount',value:'amount'},
-                {name:'Total',value:'total'}
-            ],
-            isTriggered: function (message) { 
-                return (message && message.event && message.event == 'assist'); 
-            }
-        }),
-        TEAM_KILL: new Class({
-            Extends: Event,
-            name: 'Team Kill',
-            variables: [
-                {name:'Total',value:'total'},
-                {name:'Amount',value:'amount'}
-            ],
-            isTriggered: function (message) { 
-                return (message && message.event && message.event == 'team_kill'); 
-            }
-        }),
-        TEAM_DEATH: new Class({
-            Extends: Event,
-            name: 'Team Death',
-            variables: [
-                {name:'Total',value:'total'},
-                {name:'Amount',value:'amount'}
-            ],
-            isTriggered: function (message) { 
-                return (message && message.event && message.event == 'team_death'); 
-            }
-        }),
-        GAME_STARTED: new Class({
-            Extends: Event,
-            name: 'Game Started',
-            variables: [ ],
-            isTriggered: function (message) { 
-                return (message && message.event && message.event == 'game_started'); 
-            }
-        }),
-        GAME_FINISHED: new Class({
-            Extends: Event,
-            name: 'Game Finished',
-            variables: [ ],
-            isTriggered: function (message) { 
-                return (message && message.event && message.event == 'game_finished'); 
-            }
-        }),
-        GAME_LOADING: new Class({
-            Extends: Event,
-            name: 'Game Loading',
-            variables: [ ],
-            isTriggered: function (message) { 
-                return (message && message.event && message.event == 'game_loading'); 
-            }
-        })
+    namespaces: {},
+    id: {
+        parse: function(id){ var idSplit = id.split('.'); return { namespace: idSplit[0],  event: idSplit[1] }; },
+        stringify: function(namespace, event){ return namespace + '.' + event; },
     },
     qualifierOperations: {
         '=': function(a,b){ return a == b },

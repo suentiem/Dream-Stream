@@ -1,5 +1,28 @@
 var Effect = new Class({
     resourceType: null,
+    baseSettings: [
+        {
+            name: 'Delay',
+            key: 'base_delay',
+            type: 'range',
+            range: [0,30,0.1],
+            default: 0
+        },
+        {
+            name: 'Repeat Times',
+            key: 'base_repeat_times',
+            type: 'range',
+            range: [0,50,1],
+            default: 0
+        },
+        {
+            name: 'Repeat Delay',
+            key: 'base_repeat_delay',
+            type: 'range',
+            range: [0,10,0.1],
+            default: 0
+        }
+    ],
     initialize: function(options){
         if (this.resourceType === null){
             console.error('Failed to specify a resource type for effect!');
@@ -7,6 +30,24 @@ var Effect = new Class({
         this.options = options;
         this.resourceClass = Resources.types[options.resource.type];
         this.resource = new this.resourceClass(this.resourceType, options.resource);
+    },
+    handleTrigger: function() {
+        // Delay if necessary
+        setTimeout(function() {
+            this.trigger();
+
+            if (this.options.base_repeat_times) {
+                var timesLeft = this.options.base_repeat_times
+
+                var interval = setInterval(function(){
+                    this.trigger();
+
+                    timesLeft--;
+                    if (timesLeft === 0)
+                        clearInterval(interval);
+                }.bind(this), this.options.base_repeat_delay * 1000);
+            }
+        }.bind(this), this.options.base_delay * 1000);
     },
     trigger: function() {
         console.error('Failed to specify an activation for effect!');
@@ -73,16 +114,13 @@ Effects = {
             ],
             initialize: function(options){
                 this.parent(options);
-
-                this.options.scale = this.options.scale || 1;
-                this.options.intensity = this.options.intensity || 'HIGH';
             },
             trigger: function() {
 
-                var minX = Stage.screen.width / 4;
-                var maxX = Stage.screen.width*3 / 4;
-                var minY = Stage.screen.height / 4;
-                var maxY = Stage.screen.height*3 / 4;
+                var minX = Stage.screen.width / 6;
+                var maxX = Stage.screen.width*5 / 6;
+                var minY = Stage.screen.height / 6;
+                var maxY = Stage.screen.height*5 / 6;
 
                 var location = {
                     x: parseInt(Math.random() * (maxX-minX)) + minX,
@@ -103,6 +141,80 @@ Effects = {
                         force: this.options.force
                     });
                 }
+            }
+        }),
+        ANIMATION_EMITTER: new Class({
+            Extends: Effect,
+            resourceType: 'IMAGE',
+            name: 'Animation - Emitter',
+            settings: [
+                {
+                    name: 'Scale',
+                    key: 'scale',
+                    type: 'range',
+                    range: [0,5,0.01],
+                    default: 1
+                },
+                {
+                    name: 'Particles / Second',
+                    key: 'particles_per_second',
+                    type: 'range',
+                    range: [0,1000,1],
+                    default: 100
+                },
+                {
+                    name: 'Time',
+                    key: 'time_seconds',
+                    type: 'range',
+                    range: [0,10,.1],
+                    default: 1
+                },
+                {
+                    name: 'Force',
+                    key: 'force',
+                    type: 'range',
+                    range: [0.5,5,0.01],
+                    default: 1
+                }
+            ],
+            initialize: function(options){
+                this.parent(options);
+            },
+            trigger: function() {
+                var minX = Stage.screen.width / 4;
+                var maxX = Stage.screen.width*3 / 4;
+                var minY = Stage.screen.height / 4;
+                var maxY = Stage.screen.height*3 / 4;
+
+                var location = {
+                    x: parseInt(Math.random() * (maxX-minX)) + minX,
+                    y: parseInt(Math.random() * (maxY-minY)) + minY
+                };
+
+                var intervalTime = 1000 / this.options.particles_per_second;
+                var particleCount = this.options.intensity;
+
+                var generateParticle = function() {
+                    var asset = this.resource.generate();
+
+                    if (this.options.scale)
+                        asset.scale = {x:this.options.scale, y:this.options.scale};
+
+                    new Particles.types.firework(asset, {
+                        x: location.x,
+                        y: location.y,
+                        force: this.options.force
+                    });
+                }.bind(this);
+
+                var interval = setInterval(generateParticle, intervalTime);
+
+                setTimeout(
+                    function(){ 
+                        clearInterval(interval); 
+                    }, 
+                    1000 * this.options.time_seconds
+                );
             }
         }),
         ANIMATION_ZOOM: new Class({

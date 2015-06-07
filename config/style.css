@@ -1,4 +1,12 @@
 
+#settings-file {
+    width: 300px;
+}
+#settings-file-export, #settings-file-import {
+    float: right;
+    margin-left: 20px;
+}
+
 table#listeners tbody tr:not(.new) {
     border-bottom: 1px dotted #ccc;
 }
@@ -39,12 +47,17 @@ table#listeners ul.effects > li {
 }
 
 table#listeners input.stats {
-    width: 60px;
+    width: 90px;
 }
-table#listeners .effect-settings {
+table#listeners .event-select {
+    font-weight: bold;
+}
+table#listeners .effect-settings,
+table#listeners .effect-base-settings {
     display:none;
 }
-table#listeners .effect-settings label {
+table#listeners .effect-settings label,
+table#listeners .effect-base-settings label {
     width: 100px;
     line-height: 30px;
 }

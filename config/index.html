@@ -1,9 +1,11 @@
 <!DOCTYPE HTML>
 <html>
     <head>
+        <title>Settings | Dream Stream</title>
         <script src="/framework/external/jquery.min.js"></script>
         <script src="/framework/external/mootools-core-full-nocompat.min.js"></script>
         <script src="/framework/external/underscore-min.js"></script>
+        <script src="/framework/external/jquery-ui.min.js"></script>
 
         <!-- Bootstrap -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
@@ -11,12 +13,15 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 
         <script src="/framework/events.js"></script>
+        <script src="/framework/events/league_of_legends.js"></script>
         <script src="/framework/resources.js"></script>
         <script src="/framework/effects.js"></script>
         <script src="/framework/socket.js"></script>
+        <script src="./generate.js"></script>
         <script src="./main.js"></script>
 
         <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="/framework/external/jquery-ui.min.css">
 
         <script>
             $(main);
@@ -27,11 +32,25 @@
             <h2>Settings</h2>
             <header>
                 <form class="form-inline">
+                    <button id="settings-file-export" type="submit" class="btn btn-default">
+                        <span class="glyphicon glyphicon-export"></span>
+                        Export
+                    </button>
+                    <button id="settings-file-import" type="submit" class="btn btn-default" onclick="event.preventDefault();$('#settings-file-import-file').click();">
+                        <span class="glyphicon glyphicon-import"></span>
+                        Import
+                    </button>
+
                     <div class="form-group">
                         <label class="sr-only">Settings</label>
                         <select class="form-control" id="settings-file"></select>
                     </div>
-                    <button id="settings-file-new" type="submit" class="btn btn-primary glyphicon glyphicon-plus"></button>
+                    <button id="settings-file-new" type="submit" class="btn btn-primary">
+                        <span class="glyphicon glyphicon-plus"></span>
+                    </button>
+                    <form>
+                        <input id="settings-file-import-file" type="file" style="visibility:hidden" name="file" />
+                    </form>
                 </form>
             </header>
 
