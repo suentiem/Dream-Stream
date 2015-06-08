@@ -1,7 +1,9 @@
 # Dream Stream
+Dream stream lets you set up sounds and animations for your stream that react to games
 
-## To Run:
+## Running
+* pip install -r requirements.txt
 * python main.py
 
-## To Build
+## Building
 * python build.py
