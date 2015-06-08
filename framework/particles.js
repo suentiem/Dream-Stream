@@ -39,7 +39,6 @@ var Particle = new Class({
     destroy: function(){
         Stage.removeChild(this.sprite);
         Stage.removeFromDrawLoop(this.id);
-        console.log('Killed me');
     }
 });
 
