@@ -29,7 +29,7 @@ var main = function(){
             var listeners = Settings.get('listeners');
             
             // Clear current events
-            _.each(events, function(id, _events){
+            _.each(events, function(_events, id){
                 events[id] = [];
             });
             eventsAll = [];
