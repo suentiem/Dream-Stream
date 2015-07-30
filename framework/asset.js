@@ -11,9 +11,25 @@ var Assets = {
             Extends: Asset,
             initialize: function(uri) {
                 this.parent(uri);
-                this.texture = new PIXI.Texture.fromImage(this.url);
+
+                this.type = null;
+                if (this.url.match(/\.(mp4|webm)$/))
+                    this.type = 'Video';
+                else
+                    this.type = 'Image';
+
+                this.texture = new PIXI.Texture['from' + this.type](this.url);
             },
             generate: function() {
+                // If it's a video, try to loop it
+                if (this.type === 'Video') {
+                    try {
+                        this.texture.baseTexture.source.setAttribute('loop', 'true');
+                        this.texture.baseTexture.source.play();
+                    } catch(e){}
+                }
+                console.log('a', new PIXI.Sprite(this.texture).texture);
+
                 return new PIXI.Sprite(this.texture);
             }
         }),
