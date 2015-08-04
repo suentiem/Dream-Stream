@@ -1,7 +1,4 @@
-from flask import Flask, send_from_directory, send_file, jsonify, request, Response
-from tornado.wsgi import WSGIContainer
-from tornado.httpserver import HTTPServer
-from tornado.ioloop import IOLoop, PeriodicCallback
+from flask import Flask, send_from_directory, send_file, jsonify, request
 from io import BytesIO
 from os import walk, listdir, remove
 from os.path import join, isfile
@@ -9,10 +6,12 @@ from window import Gui
 from threading import Event
 from time import sleep
 from settings import HOST, PORT, PORT_WS
+from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
+from json import loads, dumps
+
 from gevent.wsgi import WSGIServer
 from gevent import monkey, sleep as gsleep; monkey.patch_all()
-import json
-import zipfile
+
 from ws4py.server.geventserver import WebSocketWSGIApplication, \
      WebSocketWSGIHandler, WSGIServer
 from ws4py.websocket import EchoWebSocket
@@ -64,7 +63,7 @@ def settings():
     try:
         current_settings_name = open(PATH_SETTINGS_DEFAULT, 'rb').read()
         current_settings_raw = open(PATH_SETTINGS + current_settings_name, 'rb+').read()
-        current_settings = json.loads(current_settings_raw)
+        current_settings = loads(current_settings_raw)
     except:
         current_settings_name = 'Default'
         current_settings = {}
@@ -109,7 +108,7 @@ def settings_save():
     else:
         name += '.json'
 
-    open(PATH_SETTINGS + name, 'wb+').write(json.dumps(settings))
+    open(PATH_SETTINGS + name, 'wb+').write(dumps(settings))
 
     return jsonify({ "success": True })
 
@@ -123,7 +122,9 @@ def files_list():
     for path, subdirs, files in walk(PATH_FILES):
         for name in files:
             if not name.lower() in ('thumbs.db', 'empty'):
-                files_output.append(path.replace('\\', '/').replace(PATH_FILES, '') + '/' + name)
+                _path = path.replace('\\', '/').replace(PATH_FILES, '')
+                _path = _path + '/' if _path else ''
+                files_output.append(_path + name)
     return jsonify({ "files": files_output })
     
 @app.route('/files/<path:path>')
@@ -137,7 +138,7 @@ def send_files(path):
 @app.route('/export.zip', methods=['POST'])
 def export():
     name = request.form.get('name')
-    settings = json.loads(open(PATH_SETTINGS + name + '.json', 'rb').read())
+    settings = loads(open(PATH_SETTINGS + name + '.json', 'rb').read())
 
     # Build list of needed resources
     resources = []
@@ -151,17 +152,17 @@ def export():
 
     # Create ZIP with all files
     memory_file = BytesIO()
-    with zipfile.ZipFile(memory_file, 'w') as zf:
+    with ZipFile(memory_file, 'w') as zf:
         # Resources
         for resource in resources:
             path = PATH_FILES + resource
-            data = zipfile.ZipInfo('files/' + resource)
-            data.compress_type = zipfile.ZIP_DEFLATED
+            data = ZipInfo('files/' + resource)
+            data.compress_type = ZIP_DEFLATED
             zf.writestr(data, open(path, 'rb').read())
 
         # Config
-        data = zipfile.ZipInfo('settings/' + name + '.json')
-        data.compress_type = zipfile.ZIP_DEFLATED
+        data = ZipInfo('settings/' + name + '.json')
+        data.compress_type = ZIP_DEFLATED
         zf.writestr(data, open(PATH_SETTINGS + name + '.json', 'rb').read())
     memory_file.seek(0)
     
@@ -172,7 +173,7 @@ def import_pack():
     file = request.files['file']
     if file:
         file.save('./temp.zip')
-        zip = zipfile.ZipFile('./temp.zip')
+        zip = ZipFile('./temp.zip')
         zip.extractall()
         filenames = zip.namelist()
         zip.close()
