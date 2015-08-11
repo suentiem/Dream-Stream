@@ -333,6 +333,10 @@ var main = function(){
             else if (setting.type == 'options') {
                 $field = generateSelect(setting.options);
             } 
+            // options
+            else if (setting.type == 'check') {
+                $field = $('<input type="checkbox" class="form-control" value="true" />').prop("checked", value)
+            } 
             // Generic input
             else {
                 $field = $('<input class="form-control" />');
@@ -448,8 +452,17 @@ var main = function(){
                 _.each($effect.find('.settings-field'), function(settingsField){
                     var $settingsField = $(settingsField);
                     var value = $settingsField.val();
-                    var isRange = $settingsField.attr('type') == 'range';
-                    effect[$settingsField.data('settings-key')] = isRange ? parseFloat(value) : value;
+
+                    switch ($settingsField.attr('type')) {
+                        case 'range':
+                            value = parseFloat(value); break;
+                        case 'checkbox':
+                            value = $settingsField.prop("checked"); break;
+                        default:
+                            break;
+                    }
+
+                    effect[$settingsField.data('settings-key')] = value;
                 });
 
                 effects.push(effect);

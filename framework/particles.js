@@ -93,7 +93,7 @@ var Particles = {
                     },
                     x: 0,
                     y: 0,
-                    r: 0,
+                    r: 0
                 };
 
                 var frameTime = 1000/60;
