@@ -53,7 +53,7 @@ Events.namespaces.LEAGUE_OF_LEGENDS = {
             variables: [
                 {name:'Amount',value:'amount'},
                 {name:'Streak',value:'streak'},
-                {name:'Total',value:'total'}
+                {name:'Total',value:'kills'}
             ],
             isTriggered: function (message) { 
                 return (message.type == 'PLAYER_KILL' && message.playerId === currentPlayer.id); 
