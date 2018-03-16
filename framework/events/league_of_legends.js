@@ -1,12 +1,35 @@
+var currentPlayer = null;
+var players = [];
+var playersById = {};
+
 Events.namespaces.LEAGUE_OF_LEGENDS = {
     name: 'League of Legends',
     initialize: function(onReady, onEvent){
+        console.log('HAY zaa HAY BABY');
         this.socket = new Socket('127.0.0.1', 9001, {
             onReady: onReady,
             onMessage: function(message){
                 // Guarantee event exists
-                if (message.event === undefined)
-                    message.event = null;
+                if (message.type === undefined)
+                    message.type = null;
+
+                // Register Player
+                if (message.type == 'INITIALIZATION' || message.type == 'GAME_START') {
+                    var playerId = message.playerId;
+                    teams = message.players;
+                    playersById = {};
+                    players = [].concat(teams.ORDER, teams.CHAOS);
+                    players.forEach(function(player){
+                        playersById[player.id] = player;
+                        if (player.id == playerId)
+                            currentPlayer = player;
+                    });
+                }
+
+                if (currentPlayer.id == message.playerId
+                    && message.type !== 'PLAYER_HEALTH'
+                    && message.type !== 'PLAYER_GOLD')
+                    console.log('MINE', message);
 
                 onEvent(message);
             }
@@ -21,7 +44,7 @@ Events.namespaces.LEAGUE_OF_LEGENDS = {
                 {name:'Total',value:'total'}
             ],
             isTriggered: function (message) { 
-                return (message.event == 'cs'); 
+                return (message.type == 'PLAYER_CS' && message.playerId === currentPlayer.id); 
             }
         }),
         KILL: new Class({
@@ -33,7 +56,7 @@ Events.namespaces.LEAGUE_OF_LEGENDS = {
                 {name:'Total',value:'total'}
             ],
             isTriggered: function (message) { 
-                return (message.event == 'kill'); 
+                return (message.type == 'PLAYER_KILL' && message.playerId === currentPlayer.id); 
             }
         }),
         DEATH: new Class({
@@ -43,7 +66,7 @@ Events.namespaces.LEAGUE_OF_LEGENDS = {
                 {name:'Total',value:'total'}
             ],
             isTriggered: function (message) { 
-                return (message.event == 'death'); 
+                return (message.type == 'PLAYER_DEATH' && message.playerId === currentPlayer.id);
             }
         }),
         ASSIST: new Class({
@@ -54,7 +77,7 @@ Events.namespaces.LEAGUE_OF_LEGENDS = {
                 {name:'Total',value:'total'}
             ],
             isTriggered: function (message) { 
-                return (message.event == 'assist'); 
+                return (message.type == 'PLAYER_ASSIST' && message.playerId === currentPlayer.id);
             }
         }),
         TEAM_KILL: new Class({
@@ -65,7 +88,8 @@ Events.namespaces.LEAGUE_OF_LEGENDS = {
                 {name:'Amount',value:'amount'}
             ],
             isTriggered: function (message) { 
-                return (message.event == 'team_kill'); 
+                var player = playersById[message.playerId];
+                return (message.type == 'PLAYER_KILL' && player.team == currentPlayer.team && player.id !== currentPlayer.id);
             }
         }),
         TEAM_DEATH: new Class({
@@ -75,8 +99,9 @@ Events.namespaces.LEAGUE_OF_LEGENDS = {
                 {name:'Total',value:'total'},
                 {name:'Amount',value:'amount'}
             ],
-            isTriggered: function (message) { 
-                return (message.event == 'team_death'); 
+            isTriggered: function (message) {
+                var player = playersById[message.playerId];
+                return (message.type == 'PLAYER_DEATH' && player.team == currentPlayer.team && player.id !== currentPlayer.id);
             }
         }),
         GAME_STARTED: new Class({
@@ -84,7 +109,7 @@ Events.namespaces.LEAGUE_OF_LEGENDS = {
             name: 'Game Started',
             variables: [ ],
             isTriggered: function (message) { 
-                return (message.event == 'game_started'); 
+                return (message.type == 'GAME_START'); 
             }
         }),
         GAME_FINISHED: new Class({
@@ -92,7 +117,19 @@ Events.namespaces.LEAGUE_OF_LEGENDS = {
             name: 'Game Finished',
             variables: [ ],
             isTriggered: function (message) { 
-                return (message.event == 'game_finished'); 
+                return (message.type == 'GAME_END'); 
+            }
+        }),
+        SPELL_CAST: new Class({
+            Extends: Event,
+            name: 'Spell Cast',
+            variables: [
+                {name:'Spell Level', value:'spellLevel'},
+                {name:'Spell Name', value:'spellName'},
+                {name:'Key', value:'key'},
+            ],
+            isTriggered: function (message) { 
+                return (message.type == 'PLAYER_SPELL_CAST'); 
             }
         }),
         GAME_LOADING: new Class({
@@ -100,7 +137,7 @@ Events.namespaces.LEAGUE_OF_LEGENDS = {
             name: 'Game Loading',
             variables: [ ],
             isTriggered: function (message) { 
-                return (message.event == 'game_loading'); 
+                return (message.type == 'game_loading'); 
             }
         })
     }
